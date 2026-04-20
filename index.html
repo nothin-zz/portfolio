@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Farrukh Sabriy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+<style>
+:root{
+  --bg:#080808;--bg2:#111;--bg3:#1a1a1a;
+  --red:#ff2d2d;--orange:#ff8c00;--cyan:#00e5ff;
+  --white:#f0ede8;--muted:#555;--line:rgba(255,255,255,0.07);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--white);cursor:none}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--red)}
+
+/* ── CURSOR ── */
+#cur{position:fixed;top:0;left:0;z-index:99999;pointer-events:none;width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 12px var(--red);transform:translate(-50%,-50%);transition:width .15s,height .15s,background .15s}
+#cur2{position:fixed;top:0;left:0;z-index:99998;pointer-events:none;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,45,45,.3);transform:translate(-50%,-50%);transition:width .12s,height .12s}
+body.ch #cur{width:16px;height:16px;background:var(--cyan)}
+body.ch #cur2{width:50px;height:50px;border-color:rgba(0,229,255,.3)}
+
+/* ── NOISE ── */
+#noise{position:fixed;inset:0;z-index:1;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.05'/%3E%3C/svg%3E");opacity:.55}
+
+/* ── PRELOADER ── */
+#pre{position:fixed;inset:0;z-index:99990;background:#080808;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.8rem}
+.pre-logo{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,12vw,8rem);letter-spacing:.08em;color:transparent;-webkit-text-stroke:1px var(--red);clip-path:inset(0 100% 0 0)}
+.pre-bar-track{width:200px;height:1px;background:rgba(255,255,255,.08);overflow:hidden}
+.pre-bar{height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--orange))}
+.pre-pct{font-family:'Fira Code',monospace;font-size:.72rem;color:var(--muted);letter-spacing:.12em}
+.pre-sub{font-family:'Fira Code',monospace;font-size:.6rem;color:rgba(85,85,85,.6);letter-spacing:.2em;text-transform:uppercase;opacity:0}
+
+/* ── CURTAIN ── */
+#curtain{position:fixed;inset:0;z-index:9000;background:var(--red);transform:scaleY(0);transform-origin:bottom;pointer-events:none}
+
+/* ── SIDEBAR ── */
+#sidebar{position:fixed;left:0;top:0;bottom:0;z-index:8000;width:68px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2rem 0;border-right:1px solid var(--line);background:rgba(8,8,8,.88);backdrop-filter:blur(16px)}
+.sb-logo{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.12em;color:var(--red);writing-mode:vertical-lr;transform:rotate(180deg);text-decoration:none}
+.sb-links{display:flex;flex-direction:column;align-items:center;gap:2rem}
+.sb-link{font-family:'Fira Code',monospace;font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-decoration:none;writing-mode:vertical-lr;transform:rotate(180deg);transition:color .2s;position:relative;padding:.2rem 0;cursor:none}
+.sb-link::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:1px;height:0;background:var(--red);transition:height .25s}
+.sb-link:hover,.sb-link.active{color:var(--white)}
+.sb-link:hover::after,.sb-link.active::after{height:100%}
+.sb-socials{display:flex;flex-direction:column;align-items:center;gap:1.2rem}
+.sb-icon{width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--muted);text-decoration:none;transition:color .2s,transform .2s;cursor:none}
+.sb-icon:hover{color:var(--red);transform:scale(1.18)}
+
+/* ── TOPBAR MOBILE ── */
+#topbar{position:fixed;top:0;left:0;right:0;z-index:8000;display:none;align-items:center;justify-content:space-between;padding:.85rem 1.4rem;background:rgba(8,8,8,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+@media(max-width:768px){#sidebar{display:none}#topbar{display:flex}#main-wrap{margin-left:0!important;padding-top:52px}}
+.t-logo{font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:.08em;color:var(--red);text-decoration:none}
+.hbl{width:20px;height:1.5px;background:var(--white);transition:transform .28s,opacity .28s}
+#hbg{display:flex;flex-direction:column;gap:5px;cursor:none}
+#hbg.o .hbl:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+#hbg.o .hbl:nth-child(2){opacity:0}
+#hbg.o .hbl:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+#mob{position:fixed;inset:0;top:52px;z-index:7999;background:rgba(8,8,8,.97);backdrop-filter:blur(24px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem;clip-path:inset(0 0 100% 0);transition:clip-path .5s cubic-bezier(.16,1,.3,1)}
+#mob.o{clip-path:inset(0 0 0 0)}
+.m-nav-link{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.2rem,8vw,4rem);letter-spacing:.06em;color:var(--white);text-decoration:none;cursor:none;transition:color .2s,letter-spacing .2s}
+.m-nav-link:hover{color:var(--red);letter-spacing:.1em}
+
+/* ── MAIN WRAP ── */
+#main-wrap{margin-left:68px;height:100vh;overflow:hidden;position:relative}
+
+/* ── PAGES ── */
+.page{position:absolute;inset:0;overflow-y:auto;opacity:0;pointer-events:none}
+.page.active{opacity:1;pointer-events:all}
+.page::-webkit-scrollbar{width:3px}
+.page::-webkit-scrollbar-track{background:transparent}
+.page::-webkit-scrollbar-thumb{background:var(--red)}
+
+/* ── TYPOGRAPHY ── */
+.display{font-family:'Bebas Neue',sans-serif;font-size:clamp(4rem,11vw,10rem);line-height:.92;letter-spacing:.04em}
+.display-md{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,4rem);letter-spacing:.05em;line-height:1}
+.mono-lbl{font-family:'Fira Code',monospace;font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:.6rem}
+.mono-lbl::before{content:'//';color:rgba(255,255,255,.18)}
+.ghost{color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.1)}
+
+/* ── BUTTONS ── */
+.red-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.65rem 1.5rem;font-family:'Instrument Sans',sans-serif;font-size:.75rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;text-decoration:none;background:var(--red);color:#000;cursor:none;position:relative;overflow:hidden;transition:color .3s;border:none}
+.red-btn::before{content:'';position:absolute;inset:0;background:#000;transform:translateX(-101%);transition:transform .35s cubic-bezier(.16,1,.3,1)}
+.red-btn:hover{color:var(--white)}
+.red-btn:hover::before{transform:translateX(0)}
+.red-btn-inner{position:relative;z-index:1;display:flex;align-items:center;gap:.5rem}
+.ghost-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.65rem 1.5rem;font-family:'Instrument Sans',sans-serif;font-size:.75rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;text-decoration:none;border:1px solid var(--line);color:var(--muted);cursor:none;background:transparent;transition:border-color .2s,color .2s}
+.ghost-btn:hover{border-color:var(--white);color:var(--white)}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--line);padding:1.6rem;position:relative;overflow:hidden;transition:border-color .25s,transform .3s cubic-bezier(.16,1,.3,1)}
+.card:hover{border-color:rgba(255,45,45,.35);transform:translateY(-4px)}
+.card::before{content:'';position:absolute;top:0;left:0;width:2px;height:0;background:var(--red);transition:height .35s cubic-bezier(.16,1,.3,1)}
+.card:hover::before{height:100%}
+
+/* ── REVEAL ── */
+.rv{opacity:0;transform:translateY(28px)}
+
+/* ─────────────────────────────────
+   PAGE — HOME
+───────────────────────────────── */
+#pg-home{background:var(--bg)}
+.home-inner{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:5rem 3rem 5rem 3.5rem;position:relative;overflow:hidden}
+#hc{position:absolute;inset:0;opacity:.38;pointer-events:none}
+.bg-ghost{position:absolute;right:-2rem;top:50%;transform:translateY(-50%);font-family:'Bebas Neue',sans-serif;font-size:clamp(10rem,25vw,22rem);line-height:1;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.025);pointer-events:none;user-select:none}
+.hero-sub{font-family:'Fira Code',monospace;font-size:.8rem;color:var(--muted);letter-spacing:.05em;line-height:2;margin-bottom:2.5rem;max-width:500px}
+.hero-sub .hl{color:var(--orange)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:.8rem;margin-bottom:3.5rem}
+.hero-stats{display:flex;flex-wrap:wrap;gap:3rem;border-top:1px solid var(--line);padding-top:2.5rem}
+.hs-num{font-family:'Bebas Neue',sans-serif;font-size:3rem;line-height:1;color:var(--white)}
+.hs-num .u{color:var(--red);font-size:1.6rem}
+.hs-lbl{font-family:'Fira Code',monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:.2rem}
+.scroll-ind{position:absolute;right:2.5rem;bottom:2.5rem;display:flex;flex-direction:column;align-items:center;gap:.5rem;font-family:'Fira Code',monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.s-line{width:1px;height:44px;background:linear-gradient(to bottom,var(--red),transparent);animation:sl 2s ease-in-out infinite}
+@keyframes sl{0%,100%{transform:scaleY(0);transform-origin:top;opacity:0}50%{transform:scaleY(1);opacity:1}}
+
+/* ─────────────────────────────────
+   PAGE — ABOUT
+───────────────────────────────── */
+#pg-about{background:var(--bg)}
+.about-inner{min-height:100vh;padding:5rem 3rem 5rem 3.5rem}
+.about-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:4rem;align-items:start;margin-top:3rem}
+@media(max-width:900px){.about-grid{grid-template-columns:1fr;gap:2.5rem}}
+.portrait-wrap{position:relative;aspect-ratio:3/4;max-width:320px}
+.portrait-img{width:100%;height:100%;object-fit:cover;filter:grayscale(25%);transition:filter .4s;display:block}
+.portrait-wrap:hover .portrait-img{filter:grayscale(0%)}
+.portrait-border{position:absolute;inset:0;border:1px solid rgba(255,45,45,.2);transform:translate(12px,12px);pointer-events:none;transition:transform .4s cubic-bezier(.16,1,.3,1)}
+.portrait-wrap:hover .portrait-border{transform:translate(6px,6px)}
+.portrait-tag{position:absolute;bottom:0;left:0;background:var(--red);padding:.4rem .9rem;font-family:'Fira Code',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:#000;font-weight:500}
+.about-bio{font-size:.9rem;color:rgba(240,237,232,.65);line-height:1.88;margin-bottom:1.2rem}
+.about-bio strong{color:var(--white);font-weight:600}
+.skill-list{margin-top:1.8rem}
+.skill-row{display:flex;align-items:center;gap:1rem;padding:.9rem 0;border-bottom:1px solid var(--line)}
+.skill-row:first-child{border-top:1px solid var(--line)}
+.skill-nm{font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:.04em;color:var(--white);min-width:140px}
+.skill-track{flex:1;height:1.5px;background:rgba(255,255,255,.06)}
+.skill-fill{height:100%;width:0;background:var(--red);transition:width 1.4s cubic-bezier(.16,1,.3,1)}
+.skill-fill.c{background:var(--cyan)}
+.skill-fill.o{background:var(--orange)}
+.skill-pct-txt{font-family:'Fira Code',monospace;font-size:.62rem;color:var(--muted);min-width:28px;text-align:right}
+.a-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);margin:1.5rem 0}
+.a-stat{background:var(--bg2);padding:1.2rem;text-align:center}
+.a-stat-n{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;line-height:1;color:var(--white)}
+.a-stat-n .su{color:var(--red)}
+.a-stat-l{font-family:'Fira Code',monospace;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:.25rem}
+.exp-list{margin-top:2.5rem}
+.exp-item{border-left:1px solid var(--line);padding:1.3rem 0 1.3rem 1.6rem;position:relative}
+.exp-item::before{content:'';position:absolute;left:-4px;top:1.6rem;width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red)}
+.exp-period{font-family:'Fira Code',monospace;font-size:.6rem;letter-spacing:.1em;color:var(--red);margin-bottom:.3rem}
+.exp-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.04em;color:var(--white);margin-bottom:.15rem}
+.exp-co{font-size:.78rem;color:var(--muted);margin-bottom:.5rem}
+.exp-desc{font-size:.8rem;color:rgba(240,237,232,.5);line-height:1.7}
+
+/* ─────────────────────────────────
+   PAGE — MUSIC
+───────────────────────────────── */
+#pg-music{background:var(--bg)}
+.music-inner{min-height:100vh;padding:5rem 3rem 5rem 3.5rem}
+.genre-pills{display:flex;flex-wrap:wrap;gap:.5rem;margin:1.5rem 0 2rem}
+.genre-pill{padding:.28rem .85rem;font-family:'Fira Code',monospace;font-size:.6rem;letter-spacing:.08em;border:1px solid var(--line);color:var(--muted);cursor:none;transition:border-color .2s,color .2s,background .2s;background:transparent}
+.genre-pill:hover,.genre-pill.active{border-color:var(--red);color:var(--red);background:rgba(255,45,45,.05)}
+.music-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start}
+@media(max-width:900px){.music-grid{grid-template-columns:1fr}}
+
+/* Player */
+.player-box{background:var(--bg2);border:1px solid var(--line);padding:1.6rem}
+.player-art{width:100%;aspect-ratio:1;background:var(--bg3);position:relative;overflow:hidden;margin-bottom:1.4rem}
+.player-art img{width:100%;height:100%;object-fit:cover;filter:grayscale(15%)}
+.vinyl-overlay{position:absolute;inset:0;background:repeating-radial-gradient(circle at center,transparent 0,transparent 16px,rgba(255,255,255,.025) 17px,transparent 18px);opacity:0;transition:opacity .4s;animation:spin 7s linear infinite}
+.player-box.playing .vinyl-overlay{opacity:1}
+@keyframes spin{to{transform:rotate(360deg)}}
+.track-title{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:.04em;color:var(--white);margin-bottom:.2rem}
+.track-artist{font-family:'Fira Code',monospace;font-size:.62rem;letter-spacing:.08em;color:var(--muted)}
+.p-progress{width:100%;height:2px;background:rgba(255,255,255,.07);margin:1rem 0 .4rem;cursor:none;position:relative}
+.p-fill{height:100%;width:0;background:var(--red);pointer-events:none}
+.p-times{display:flex;justify-content:space-between;margin-bottom:.9rem}
+.p-time{font-family:'Fira Code',monospace;font-size:.6rem;color:var(--muted)}
+.p-controls{display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+.p-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:none;transition:color .2s,border-color .2s}
+.p-btn:hover{color:var(--white);border-color:var(--white)}
+.p-btn.play-btn{width:46px;height:46px;background:var(--red);border-color:var(--red);color:#000}
+.p-btn.play-btn:hover{background:#fff;border-color:#fff}
+.vol-row{display:flex;align-items:center;gap:.5rem;flex:1;max-width:90px}
+.vol-slider{flex:1;appearance:none;height:2px;background:rgba(255,255,255,.07);cursor:none;outline:none}
+.vol-slider::-webkit-slider-thumb{appearance:none;width:9px;height:9px;border-radius:50%;background:var(--red);cursor:none}
+.visualizer{display:flex;align-items:flex-end;gap:2.5px;height:36px;margin-top:1rem}
+.v-bar{flex:1;background:var(--red);border-radius:1px 1px 0 0;transform-origin:bottom;animation:vb 1s ease-in-out infinite}
+@keyframes vb{0%,100%{transform:scaleY(.15)}50%{transform:scaleY(1)}}
+.player-box:not(.playing) .v-bar{animation-play-state:paused;transform:scaleY(.15)}
+
+/* Playlist */
+.playlist-box{background:var(--bg2);border:1px solid var(--line)}
+.pl-head{padding:1.2rem 1.4rem;border-bottom:1px solid var(--line);font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.05em;color:var(--white)}
+.pl-item{display:flex;align-items:center;gap:.9rem;padding:.75rem 1.4rem;border-bottom:1px solid rgba(255,255,255,.03);cursor:none;transition:background .18s}
+.pl-item:hover{background:rgba(255,255,255,.03)}
+.pl-item.active .pl-item-title{color:var(--red)}
+.pl-num{font-family:'Fira Code',monospace;font-size:.58rem;color:var(--muted);min-width:18px}
+.pl-item.active .pl-num{color:var(--red)}
+.pl-eq{display:none;align-items:flex-end;gap:1.5px;height:11px}
+.pl-item.active .pl-eq{display:flex}
+.pl-eq-b{width:2px;background:var(--red);border-radius:1px;animation:vb .7s ease-in-out infinite}
+.pl-eq-b:nth-child(2){animation-delay:.15s}
+.pl-eq-b:nth-child(3){animation-delay:.3s}
+.pl-item-info{flex:1;min-width:0}
+.pl-item-title{font-size:.83rem;font-weight:500;color:var(--white);transition:color .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-item-meta{font-family:'Fira Code',monospace;font-size:.57rem;color:var(--muted);margin-top:.1rem}
+.pl-dur{font-family:'Fira Code',monospace;font-size:.6rem;color:var(--muted)}
+
+/* Vibes */
+.vibes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);margin-top:2rem}
+@media(max-width:640px){.vibes-grid{grid-template-columns:1fr 1fr}}
+.vibe-card{background:var(--bg2);padding:1.3rem;cursor:none;transition:background .2s}
+.vibe-card:hover{background:var(--bg3)}
+.vibe-emoji{font-size:1.8rem;margin-bottom:.5rem}
+.vibe-name{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.05em;color:var(--white);margin-bottom:.25rem}
+.vibe-desc{font-family:'Fira Code',monospace;font-size:.58rem;color:var(--muted);line-height:1.7}
+
+/* ─────────────────────────────────
+   PAGE — CONTACT
+───────────────────────────────── */
+#pg-contact{background:var(--bg)}
+.contact-inner{min-height:100vh;padding:5rem 3rem 5rem 3.5rem}
+.contact-grid{display:grid;grid-template-columns:1fr 1.35fr;gap:3.5rem;margin-top:3rem;align-items:start}
+@media(max-width:900px){.contact-grid{grid-template-columns:1fr;gap:2.5rem}}
+.c-blocks{display:flex;flex-direction:column;gap:1.2rem}
+.c-card{background:var(--bg2);border:1px solid var(--line);padding:1.2rem;display:flex;align-items:center;gap:.9rem;transition:border-color .2s}
+.c-card:hover{border-color:rgba(255,45,45,.3)}
+.c-ico{width:38px;height:38px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--red);flex-shrink:0;font-size:1rem}
+.c-lbl{font-family:'Fira Code',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.2rem}
+.c-val{font-size:.82rem;color:var(--white);font-weight:500;text-decoration:none;transition:color .2s}
+.c-val:hover{color:var(--red)}
+.uz-card{background:var(--bg2);border:1px solid var(--line);padding:1.4rem}
+.uz-row{display:flex;align-items:center;gap:.9rem;margin-bottom:.8rem}
+.uz-text h3{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.04em;color:var(--white)}
+.uz-text p{font-family:'Fira Code',monospace;font-size:.6rem;color:var(--muted);margin-top:.1rem}
+.status-row{display:flex;align-items:center;gap:.5rem}
+.s-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pdot 2s infinite;flex-shrink:0}
+@keyframes pdot{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 5px rgba(34,197,94,0)}}
+.s-txt{font-family:'Fira Code',monospace;font-size:.62rem;color:rgba(240,237,232,.55)}
+
+/* Form */
+.c-form-box{background:var(--bg2);border:1px solid var(--line);padding:2rem}
+.form-row{position:relative;margin-bottom:1.3rem}
+.f-inp{width:100%;background:transparent;border:none;border-bottom:1px solid var(--line);padding:1.1rem 0 .45rem;color:var(--white);font-family:'Instrument Sans',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s}
+.f-inp:focus{border-color:var(--red)}
+.f-lbl{position:absolute;left:0;top:.75rem;font-family:'Fira Code',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);transition:top .2s,font-size .2s,color .2s;pointer-events:none}
+.f-inp:focus~.f-lbl,.f-inp:not(:placeholder-shown)~.f-lbl{top:-.15rem;font-size:.54rem;color:var(--red)}
+.f-inp::placeholder{color:transparent}
+textarea.f-inp{min-height:100px;resize:none}
+#f-success{display:none;text-align:center;padding:2.5rem 1rem;animation:fi .4s ease}
+@keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.suc-emoji{font-size:3rem;display:block;margin-bottom:.8rem;animation:bonce .6s ease}
+@keyframes bonce{0%,100%{transform:translateY(0)}40%{transform:translateY(-14px)}70%{transform:translateY(-7px)}}
+
+/* ─── MOBILE FIXES ─── */
+@media(max-width:768px){
+  .home-inner,.about-inner,.music-inner,.contact-inner{padding:2rem 1.4rem 4rem}
+  .hero-stats{gap:1.8rem}
+  .bg-ghost{display:none}
+  .scroll-ind{display:none}
+}
+</style>
+
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur2"></div>
+<div id="noise"></div>
+
+<!-- PRELOADER -->
+
+<div id="pre">
+  <div class="pre-logo" id="pl-logo">FARRUKH</div>
+  <div class="pre-bar-track"><div class="pre-bar" id="pl-bar"></div></div>
+  <div class="pre-pct" id="pl-pct">0%</div>
+  <div class="pre-sub" id="pl-sub">Loading failure database...</div>
+</div>
+
+<!-- CURTAIN -->
+
+<div id="curtain"></div>
+
+<!-- SIDEBAR -->
+
+<div id="sidebar">
+  <a href="#" class="sb-logo" data-page="home">F·S</a>
+  <div class="sb-links">
+    <a href="#" class="sb-link active" data-page="home">Home</a>
+    <a href="#" class="sb-link" data-page="about">About</a>
+    <a href="#" class="sb-link" data-page="music">Music</a>
+    <a href="#" class="sb-link" data-page="contact">Contact</a>
+  </div>
+  <div class="sb-socials">
+    <a href="https://instagram.com/nothin.zzzz" target="_blank" class="sb-icon">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" stroke-width="1.5"/><circle cx="12" cy="12" r="4" stroke-width="1.5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+    </a>
+    <a href="https://github.com/nothin-zz" target="_blank" class="sb-icon">
+      <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2A10 10 0 002 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"/></svg>
+    </a>
+    <a href="https://t.me/nothin_xz" target="_blank" class="sb-icon">
+      <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- MOBILE TOPBAR -->
+
+<div id="topbar">
+  <a href="#" class="t-logo" data-page="home">F·S</a>
+  <button id="hbg" aria-label="Menu">
+    <div class="hbl"></div><div class="hbl"></div><div class="hbl"></div>
+  </button>
+</div>
+<div id="mob">
+  <a href="#" class="m-nav-link" data-page="home" data-close>Home</a>
+  <a href="#" class="m-nav-link" data-page="about" data-close>About</a>
+  <a href="#" class="m-nav-link" data-page="music" data-close>Music</a>
+  <a href="#" class="m-nav-link" data-page="contact" data-close>Contact</a>
+</div>
+
+<!-- MAIN WRAP -->
+
+<div id="main-wrap">
+
+<!-- ░░░░░░░░ HOME ░░░░░░░░ -->
+
+<div id="pg-home" class="page active">
+  <div class="home-inner">
+    <canvas id="hc"></canvas>
+    <div class="bg-ghost">01</div>
+
+```
+<div class="mono-lbl rv" style="margin-bottom:1.4rem">Available · Tashkent, Uzbekistan 🇺🇿</div>
+
+<div class="display rv" style="margin-bottom:1.4rem">
+  FARRUKH<br><span class="ghost">SABR</span><span style="color:var(--red)">IY</span>
+</div>
+
+<div class="hero-sub rv">
+  <span class="hl">// Professional Unhappiness Expert</span><br>
+  PRO AI User &nbsp;·&nbsp; Athlete &nbsp;·&nbsp; Instagram Doom Scroller<br>
+  Int'l Law Student &nbsp;·&nbsp; Epic MLBB Gamer<br>
+  <span class="hl">// Currently 3rd year @ UWED · Uzbekistan</span>
+</div>
+
+<div class="hero-cta rv">
+  <a href="#" class="red-btn" data-page="about">
+    <div class="red-btn-inner">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      Who is this?
+    </div>
+  </a>
+  <a href="#" class="ghost-btn" data-page="music">
+    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+    My Music
+  </a>
+  <a href="#" class="ghost-btn" data-page="contact">
+    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+    Contact
+  </a>
+</div>
+
+<div class="hero-stats rv">
+  <div><div class="hs-num">3<span class="u">rd</span></div><div class="hs-lbl">Year Law School</div></div>
+  <div><div class="hs-num">999<span class="u">+</span></div><div class="hs-lbl">Failed Projects</div></div>
+  <div><div class="hs-num">20<span class="u">yr</span></div><div class="hs-lbl">Pro Unemployment</div></div>
+  <div><div class="hs-num">1</div><div class="hs-lbl">Loyal Client</div></div>
+</div>
+
+<div class="scroll-ind">
+  <div class="s-line"></div>
+  <span>Scroll</span>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- ░░░░░░░░ ABOUT ░░░░░░░░ -->
+
+<div id="pg-about" class="page">
+  <div class="about-inner">
+    <div class="mono-lbl rv">// 001 — The Human</div>
+    <h1 class="display rv" style="margin-top:.7rem">ABOUT<br><span class="ghost">FARRUKH</span></h1>
+
+```
+<div class="about-grid">
+  <!-- Left col -->
+  <div>
+    <div class="portrait-wrap rv">
+      <img src="https://picsum.photos/seed/farrukh42/400/533" alt="Farrukh" class="portrait-img"/>
+      <div class="portrait-border"></div>
+      <div class="portrait-tag">Farrukh · Tashkent</div>
+    </div>
+    <div class="a-stats rv">
+      <div class="a-stat"><div class="a-stat-n">3<span class="su">rd</span></div><div class="a-stat-l">Year Law</div></div>
+      <div class="a-stat"><div class="a-stat-n">999<span class="su">+</span></div><div class="a-stat-l">Failures</div></div>
+      <div class="a-stat"><div class="a-stat-n">1<span class="su">yr</span></div><div class="a-stat-l">Trading RIP</div></div>
+      <div class="a-stat"><div class="a-stat-n">∞</div><div class="a-stat-l">MLBB hrs</div></div>
+    </div>
+  </div>
+
+  <!-- Right col -->
+  <div>
+    <p class="about-bio rv">Hey. I'm <strong>Farrukh Sabriy</strong> — 3rd year <strong>International Law</strong> student at <strong>UWED</strong> (University of World Economy & Diplomacy), Tashkent. Not graduated yet, not rushing either.</p>
+    <p class="about-bio rv">I tried <strong>trading for 1 year</strong> — professionally lost money. Launched <strong>999+ projects</strong> — 999+ of them failed. I have exactly <strong>1 client</strong> who probably regrets it. Some call it failure. I call it a data collection phase.</p>
+    <p class="about-bio rv">By day: doom-scrolling Instagram, grinding <strong>Mobile Legends Bang Bang</strong> at epic glory rank, and being a certified <strong>PRO AI User</strong>. Also technically an athlete — the sport is competitive procrastination.</p>
+
+    <div class="skill-list rv">
+      <div class="mono-lbl" style="margin-bottom:1rem">// Actual Skills Tier List</div>
+      <div class="skill-row"><div class="skill-nm">AI Prompting</div><div class="skill-track"><div class="skill-fill c" data-w="97"></div></div><div class="skill-pct-txt">S+</div></div>
+      <div class="skill-row"><div class="skill-nm">MLBB Gaming</div><div class="skill-track"><div class="skill-fill" data-w="89"></div></div><div class="skill-pct-txt">A+</div></div>
+      <div class="skill-row"><div class="skill-nm">Doom Scrolling</div><div class="skill-track"><div class="skill-fill o" data-w="99"></div></div><div class="skill-pct-txt">S+</div></div>
+      <div class="skill-row"><div class="skill-nm">Int'l Law</div><div class="skill-track"><div class="skill-fill c" data-w="55"></div></div><div class="skill-pct-txt">C</div></div>
+      <div class="skill-row"><div class="skill-nm">Trading</div><div class="skill-track"><div class="skill-fill" data-w="8"></div></div><div class="skill-pct-txt" style="color:var(--red)">💀</div></div>
+      <div class="skill-row"><div class="skill-nm">Unhappiness</div><div class="skill-track"><div class="skill-fill o" data-w="100"></div></div><div class="skill-pct-txt">S+</div></div>
+    </div>
+
+    <div class="exp-list rv">
+      <div class="mono-lbl" style="margin:2rem 0 1.2rem">// Timeline</div>
+      <div class="exp-item">
+        <div class="exp-period">2022 — Present</div>
+        <div class="exp-title">Student & Failure Expert</div>
+        <div class="exp-co">UWED · Tashkent, Uzbekistan</div>
+        <div class="exp-desc">Studying International Law with declining enthusiasm each semester. Mastered looking busy while doing absolutely nothing productive.</div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-period">2023 — 2024</div>
+        <div class="exp-title">Day Trader (Retired)</div>
+        <div class="exp-co">The Markets (they always win)</div>
+        <div class="exp-desc">1 year of intense battle against financial markets. Gained irreplaceable experience watching numbers go down in real time.</div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-period">2020 — Present</div>
+        <div class="exp-title">Instagram Doom Scroller</div>
+        <div class="exp-co">Meta Platforms Inc. (unpaid, involuntary)</div>
+        <div class="exp-desc">Senior-level scrolling. Zero salary, maximum screen time. @nothin.zzzz — that's the brand.</div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-period">Since Birth</div>
+        <div class="exp-title">Epic Glory Gamer — MLBB</div>
+        <div class="exp-co">Moonton · Mobile Legends: Bang Bang</div>
+        <div class="exp-desc">Professional-grade gameplay. Always blame teammates. Never self. This is the way.</div>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- ░░░░░░░░ MUSIC ░░░░░░░░ -->
+
+<div id="pg-music" class="page">
+  <div class="music-inner">
+    <div class="mono-lbl rv">// 002 — The Vibes</div>
+    <h1 class="display rv" style="margin-top:.7rem">MUSIC<br><span class="ghost">TASTE</span></h1>
+    <p class="rv" style="font-family:'Fira Code',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.05em;margin-top:.8rem;max-width:480px">// This is what plays while I scroll Instagram and pretend to study international law</p>
+
+```
+<div class="genre-pills rv">
+  <button class="genre-pill active" data-genre="all">All</button>
+  <button class="genre-pill" data-genre="hiphop">Hip-Hop</button>
+  <button class="genre-pill" data-genre="rnb">R&amp;B</button>
+  <button class="genre-pill" data-genre="phonk">Phonk</button>
+  <button class="genre-pill" data-genre="lofi">Lo-Fi</button>
+  <button class="genre-pill" data-genre="trap">Trap</button>
+</div>
+
+<div class="music-grid rv">
+  <!-- Player -->
+  <div class="player-box" id="player-box">
+    <div class="player-art">
+      <img id="p-art" src="https://picsum.photos/seed/music1/400/400" alt="art"/>
+      <div class="vinyl-overlay"></div>
+    </div>
+    <div class="track-title" id="p-title">SAD!</div>
+    <div class="track-artist" id="p-artist">XXXTentacion · R&B</div>
+    <div class="p-progress" id="p-prog">
+      <div class="p-fill" id="p-fill"></div>
+    </div>
+    <div class="p-times">
+      <span class="p-time" id="p-cur">0:00</span>
+      <span class="p-time" id="p-dur">2:47</span>
+    </div>
+    <div class="p-controls">
+      <button class="p-btn" id="btn-prev">
+        <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+      </button>
+      <button class="p-btn play-btn" id="btn-play">
+        <svg id="ico-play" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="ico-pause" width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      </button>
+      <button class="p-btn" id="btn-next">
+        <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18 14.5 12 6 6v12zm2.5-6 8.5 6V6z"/></svg>
+      </button>
+      <div class="vol-row">
+        <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+        <input type="range" class="vol-slider" id="vol" min="0" max="100" value="80"/>
+      </div>
+    </div>
+    <div class="visualizer">
+      <div class="v-bar" style="animation-delay:0s"></div>
+      <div class="v-bar" style="animation-delay:.08s"></div>
+      <div class="v-bar" style="animation-delay:.16s"></div>
+      <div class="v-bar" style="animation-delay:.24s"></div>
+      <div class="v-bar" style="animation-delay:.12s"></div>
+      <div class="v-bar" style="animation-delay:.05s"></div>
+      <div class="v-bar" style="animation-delay:.2s"></div>
+      <div class="v-bar" style="animation-delay:.28s"></div>
+      <div class="v-bar" style="animation-delay:.1s"></div>
+      <div class="v-bar" style="animation-delay:.18s"></div>
+    </div>
+  </div>
+
+  <!-- Playlist -->
+  <div class="playlist-box">
+    <div class="pl-head">🎵 Farrukh's Playlist</div>
+    <div id="pl-items"></div>
+  </div>
+</div>
+
+<!-- Vibes -->
+<div class="mono-lbl rv" style="margin-top:2.5rem">// Mood × Music</div>
+<div class="vibes-grid rv">
+  <div class="vibe-card"><div class="vibe-emoji">😔</div><div class="vibe-name">Sad Hours</div><div class="vibe-desc">XXXTentacion, Juice WRLD — processing emotions</div></div>
+  <div class="vibe-card"><div class="vibe-emoji">🔥</div><div class="vibe-name">Gaming Mode</div><div class="vibe-desc">Hard phonk & trap — MLBB ranked grind</div></div>
+  <div class="vibe-card"><div class="vibe-emoji">📚</div><div class="vibe-name">Fake Study</div><div class="vibe-desc">Lo-fi chill — open textbook, phone in hand</div></div>
+  <div class="vibe-card"><div class="vibe-emoji">💀</div><div class="vibe-name">Trading RIP</div><div class="vibe-desc">Funeral vibes only. Charts going brrr down.</div></div>
+  <div class="vibe-card"><div class="vibe-emoji">📱</div><div class="vibe-name">Doom Scroll</div><div class="vibe-desc">Whatever's trending on Instagram reels</div></div>
+  <div class="vibe-card"><div class="vibe-emoji">🌙</div><div class="vibe-name">3AM Thoughts</div><div class="vibe-desc">Drake, The Weeknd — existential hour</div></div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- ░░░░░░░░ CONTACT ░░░░░░░░ -->
+
+<div id="pg-contact" class="page">
+  <div class="contact-inner">
+    <div class="mono-lbl rv">// 003 — Hit Me Up</div>
+    <h1 class="display rv" style="margin-top:.7rem">CONTACT<br><span class="ghost">ME</span></h1>
+    <p class="rv" style="font-family:'Fira Code',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.05em;margin-top:.8rem;max-width:480px">// Got a project? Meme? Business idea that'll definitely fail? I'm in.</p>
+
+```
+<div class="contact-grid">
+  <!-- Info -->
+  <div class="c-blocks">
+    <div class="c-card rv">
+      <div class="c-ico">📧</div>
+      <div><div class="c-lbl">Email</div><a href="mailto:nothinxz@gmail.com" class="c-val">nothinxz@gmail.com</a></div>
+    </div>
+    <div class="c-card rv">
+      <div class="c-ico">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" stroke-width="1.5"/><circle cx="12" cy="12" r="4" stroke-width="1.5"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg>
+      </div>
+      <div><div class="c-lbl">Instagram</div><a href="https://instagram.com/nothin.zzzz" target="_blank" class="c-val">@nothin.zzzz</a></div>
+    </div>
+    <div class="c-card rv">
+      <div class="c-ico">
+        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+      </div>
+      <div><div class="c-lbl">Telegram</div><a href="https://t.me/nothin_xz" target="_blank" class="c-val">@nothin_xz</a></div>
+    </div>
+    <div class="c-card rv">
+      <div class="c-ico">
+        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2A10 10 0 002 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"/></svg>
+      </div>
+      <div><div class="c-lbl">GitHub</div><a href="https://github.com/nothin-zz" target="_blank" class="c-val">nothin-zz</a></div>
+    </div>
+    <div class="uz-card rv">
+      <div class="uz-row">
+        <span style="font-size:2.2rem">🇺🇿</span>
+        <div class="uz-text"><h3>Tashkent, Uzbekistan</h3><p>UTC+5 · reply in 48h (maybe)</p></div>
+      </div>
+      <div class="status-row">
+        <span class="s-dot"></span>
+        <span class="s-txt">Open to: collabs, memes, ideas with 100% failure rate</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div class="c-form-box rv">
+    <div class="mono-lbl" style="margin-bottom:1.5rem">// Send a Message</div>
+    <form id="cf" action="https://formspree.io/f/nothinxz" method="POST">
+      <div class="form-row"><input type="text" name="name" id="fn" class="f-inp" placeholder="Name" required/><label for="fn" class="f-lbl">Your Name</label></div>
+      <div class="form-row"><input type="email" name="email" id="fe" class="f-inp" placeholder="Email" required/><label for="fe" class="f-lbl">Email Address</label></div>
+      <div class="form-row"><input type="text" name="subject" id="fs" class="f-inp" placeholder="Subject"/><label for="fs" class="f-lbl">Subject (optional)</label></div>
+      <div class="form-row"><textarea name="message" id="fm" class="f-inp" placeholder="Message" required></textarea><label for="fm" class="f-lbl">Your Message</label></div>
+      <button type="submit" class="red-btn" style="width:100%;justify-content:center">
+        <div class="red-btn-inner" style="justify-content:center">
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          Send It
+        </div>
+      </button>
+    </form>
+    <div id="f-success">
+      <span class="suc-emoji">🔥</span>
+      <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.06em;color:var(--white);margin-bottom:.4rem">Got it!</h3>
+      <p style="font-family:'Fira Code',monospace;font-size:.68rem;color:var(--muted)">Will reply soon. Or maybe never. Mystery. 🤷‍♂️</p>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+</div>
+
+</div><!-- /main-wrap -->
+
+<script>
+/* ─── CURSOR ─── */
+const cur=document.getElementById('cur'),cur2=document.getElementById('cur2');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+(function tc(){
+  rx+=(mx-rx)*.13;ry+=(my-ry)*.13;
+  cur.style.left=mx+'px';cur.style.top=my+'px';
+  cur2.style.left=rx+'px';cur2.style.top=ry+'px';
+  requestAnimationFrame(tc);
+})();
+document.querySelectorAll('a,button,input,textarea,.pl-item,.genre-pill,.vibe-card,.card,.c-card').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('ch'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('ch'));
+});
+
+/* ─── PRELOADER ─── */
+const pre=document.getElementById('pre');
+const plL=document.getElementById('pl-logo'),plB=document.getElementById('pl-bar'),plP=document.getElementById('pl-pct'),plS=document.getElementById('pl-sub');
+gsap.to(plL,{clipPath:'inset(0 0% 0 0)',duration:.75,ease:'power3.out',delay:.1});
+gsap.to(plS,{opacity:1,duration:.4,delay:.5});
+let pp=0;
+const iv=setInterval(()=>{
+  pp+=Math.random()*22;
+  if(pp>=100){pp=100;clearInterval(iv);setTimeout(()=>{gsap.to(pre,{yPercent:-100,duration:.85,ease:'power3.inOut',onComplete:()=>{pre.style.display='none';initPage('home')}})},250)}
+  plB.style.width=pp+'%';plP.textContent=Math.floor(pp)+'%';
+},90);
+
+/* ─── PAGE ROUTING ─── */
+let curPage='home';
+const curtain=document.getElementById('curtain');
+function navigateTo(pid){
+  if(pid===curPage)return;
+  gsap.timeline()
+    .set(curtain,{transformOrigin:'bottom',scaleY:0})
+    .to(curtain,{scaleY:1,duration:.32,ease:'power3.in'})
+    .call(()=>{
+      document.getElementById('pg-'+curPage).classList.remove('active');
+      document.getElementById('pg-'+pid).classList.add('active');
+      document.getElementById('pg-'+pid).scrollTop=0;
+      curPage=pid;
+      document.querySelectorAll('.sb-link').forEach(l=>l.classList.toggle('active',l.dataset.page===pid));
+      setTimeout(()=>initPage(pid),40);
+    })
+    .set(curtain,{transformOrigin:'top'})
+    .to(curtain,{scaleY:0,duration:.42,ease:'power3.out',delay:.04});
+}
+document.querySelectorAll('[data-page]').forEach(el=>{
+  el.addEventListener('click',e=>{
+    e.preventDefault();
+    if(el.hasAttribute('data-close')){document.getElementById('hbg').classList.remove('o');document.getElementById('mob').classList.remove('o')}
+    navigateTo(el.dataset.page);
+  });
+});
+
+/* ─── HAMBURGER ─── */
+document.getElementById('hbg').addEventListener('click',()=>{
+  document.getElementById('hbg').classList.toggle('o');
+  document.getElementById('mob').classList.toggle('o');
+});
+
+/* ─── INIT PAGE ─── */
+function initPage(id){
+  const pg=document.getElementById('pg-'+id);
+  gsap.fromTo(pg.querySelectorAll('.rv'),{opacity:0,y:30},{opacity:1,y:0,duration:.7,ease:'power3.out',stagger:.055,clearProps:'all'});
+  if(id==='home')initCanvas();
+  if(id==='about')initSkills();
+  if(id==='music')initMusic();
+}
+
+/* ─── CANVAS ─── */
+function initCanvas(){
+  const c=document.getElementById('hc');if(!c)return;
+  const ctx=c.getContext('2d');let W,H,pts=[];
+  function rs(){W=c.width=c.offsetWidth;H=c.height=c.offsetHeight;pts=[];const n=Math.floor((W*H)/16000);for(let i=0;i<n;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.32,vy:(Math.random()-.5)*.32,c:Math.random()>.65?'#ff2d2d':'rgba(255,255,255,.4)'})}
+  function dr(){ctx.clearRect(0,0,W,H);pts.forEach((a,i)=>{a.x+=a.vx;a.y+=a.vy;if(a.x<0||a.x>W)a.vx*=-1;if(a.y<0||a.y>H)a.vy*=-1;ctx.beginPath();ctx.arc(a.x,a.y,1.1,0,Math.PI*2);ctx.fillStyle=a.c;ctx.fill();for(let j=i+1;j<pts.length;j++){const b=pts[j],d=Math.hypot(a.x-b.x,a.y-b.y);if(d<115){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=a.c;ctx.globalAlpha=(1-d/115)*.22;ctx.lineWidth=.5;ctx.stroke();ctx.globalAlpha=1}}});requestAnimationFrame(dr)}
+  rs();dr();window.addEventListener('resize',rs);
+}
+
+/* ─── SKILLS ─── */
+function initSkills(){
+  document.querySelectorAll('.skill-fill').forEach(b=>{
+    setTimeout(()=>{b.style.width=b.dataset.w+'%'},120);
+  });
+}
+
+/* ─── MUSIC PLAYER ─── */
+const tracks=[
+  {title:'SAD!',artist:'XXXTentacion',genre:'rnb',dur:'2:47',seed:'music1'},
+  {title:'Lucid Dreams',artist:'Juice WRLD',genre:'hiphop',dur:'3:59',seed:'music2'},
+  {title:'DEAF',artist:'KSLV Noh',genre:'phonk',dur:'2:55',seed:'music3'},
+  {title:'Lofi Study Beat',artist:'ChillHop',genre:'lofi',dur:'3:22',seed:'music4'},
+  {title:'Nights',artist:'Frank Ocean',genre:'rnb',dur:'5:07',seed:'music5'},
+  {title:'MONTERO',artist:'Lil Nas X',genre:'hiphop',dur:'2:17',seed:'music6'},
+  {title:'Dark Knight Dummo',artist:'Trippie Redd',genre:'trap',dur:'2:11',seed:'music7'},
+  {title:'Midnight Rain',artist:'Lofi Chill',genre:'lofi',dur:'4:01',seed:'music8'},
+];
+let ct=0,playing=false,progV=0,progTimer=null;
+
+function initMusic(){
+  renderPL('all');loadTrack(0);
+  document.getElementById('btn-play').addEventListener('click',togglePlay);
+  document.getElementById('btn-next').addEventListener('click',nextT);
+  document.getElementById('btn-prev').addEventListener('click',prevT);
+  document.getElementById('p-prog').addEventListener('click',function(e){
+    const r=this.getBoundingClientRect();progV=(e.clientX-r.left)/r.width*100;
+    document.getElementById('p-fill').style.width=progV+'%';
+  });
+  document.querySelectorAll('.genre-pill').forEach(pill=>{
+    pill.addEventListener('click',function(){
+      document.querySelectorAll('.genre-pill').forEach(p=>p.classList.remove('active'));
+      this.classList.add('active');renderPL(this.dataset.genre);
+    });
+  });
+}
+
+function renderPL(filter){
+  const c=document.getElementById('pl-items');if(!c)return;c.innerHTML='';
+  tracks.forEach((t,i)=>{
+    if(filter!=='all'&&t.genre!==filter)return;
+    const d=document.createElement('div');
+    d.className='pl-item'+(i===ct?' active':'');d.dataset.idx=i;
+    d.innerHTML=`<div class="pl-eq"><div class="pl-eq-b"></div><div class="pl-eq-b"></div><div class="pl-eq-b"></div></div><span class="pl-num">${String(i+1).padStart(2,'0')}</span><div class="pl-item-info"><div class="pl-item-title">${t.title}</div><div class="pl-item-meta">${t.artist} · ${t.genre}</div></div><span class="pl-dur">${t.dur}</span>`;
+    d.addEventListener('click',()=>{loadTrack(i);if(!playing)togglePlay()});
+    // hover cursor
+    d.addEventListener('mouseenter',()=>document.body.classList.add('ch'));
+    d.addEventListener('mouseleave',()=>document.body.classList.remove('ch'));
+    c.appendChild(d);
+  });
+}
+
+function loadTrack(i){
+  ct=i;const t=tracks[i];
+  document.getElementById('p-title').textContent=t.title;
+  document.getElementById('p-artist').textContent=t.artist+' · '+t.genre.toUpperCase();
+  document.getElementById('p-art').src=`https://picsum.photos/seed/${t.seed}/400/400`;
+  document.getElementById('p-dur').textContent=t.dur;
+  document.getElementById('p-cur').textContent='0:00';
+  document.getElementById('p-fill').style.width='0%';
+  progV=0;clearInterval(progTimer);
+  if(playing)startProg();
+  document.querySelectorAll('.pl-item').forEach(el=>el.classList.toggle('active',+el.dataset.idx===i));
+}
+function togglePlay(){
+  playing=!playing;
+  const box=document.getElementById('player-box');
+  box.classList.toggle('playing',playing);
+  document.getElementById('ico-play').style.display=playing?'none':'block';
+  document.getElementById('ico-pause').style.display=playing?'block':'none';
+  if(playing)startProg();else clearInterval(progTimer);
+}
+function startProg(){
+  clearInterval(progTimer);
+  progTimer=setInterval(()=>{
+    progV+=.38;if(progV>100){progV=0;nextT();return}
+    document.getElementById('p-fill').style.width=progV+'%';
+    const [m,s]=tracks[ct].dur.split(':');const tot=+m*60+(+s);const c=Math.floor(tot*progV/100);
+    document.getElementById('p-cur').textContent=`${Math.floor(c/60)}:${String(c%60).padStart(2,'0')}`;
+  },140);
+}
+function nextT(){ct=(ct+1)%tracks.length;loadTrack(ct)}
+function prevT(){ct=(ct-1+tracks.length)%tracks.length;loadTrack(ct)}
+
+/* ─── CONTACT FORM ─── */
+document.getElementById('cf')?.addEventListener('submit',async function(e){
+  e.preventDefault();
+  const btn=this.querySelector('button');btn.disabled=true;
+  try{
+    const r=await fetch(this.action,{method:'POST',body:new FormData(this),headers:{Accept:'application/json'}});
+    if(r.ok)showSuccess();else btn.disabled=false;
+  }catch{showSuccess()}
+});
+function showSuccess(){
+  document.getElementById('cf').style.display='none';
+  document.getElementById('f-success').style.display='block';
+  confetti({particleCount:90,spread:75,origin:{y:.6},colors:['#ff2d2d','#ff8c00','#00e5ff','#fff']});
+}
+
+console.log('%cFARRUKH SABRIY\n%cPro Failure Expert · UWED · Tashkent 🇺🇿\n%c@nothin.zzzz','color:#ff2d2d;font-family:monospace;font-size:20px;font-weight:900','color:#888;font-size:11px;font-family:monospace','color:#00e5ff;font-size:11px;font-family:monospace');
+</script>
+
+</body>
+</html>
